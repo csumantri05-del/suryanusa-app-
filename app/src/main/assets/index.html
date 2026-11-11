@@ -1,0 +1,581 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}</style>
+<title>Kalkulator SuryaNusa</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="theme-color" content="#0b4f6c">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: satu kolom seperti aplikasi HP — header surya, kartu input, rekomendasi, dasbor, pembiayaan, garansi, alur survei, formulir. */
+:root{
+  --bg:#f3f6f8; --surface:#ffffff; --surface-2:#eef3f6; --line:#d6e0e6;
+  --ink:#10232d; --ink-2:#4b6170; --ink-3:#7a8d99;
+  --brand:#0b4f6c; --brand-ink:#ffffff;
+  --sky:#0e7aa6; --sky-bg:#e8f6fc; --sky-line:#7fcbe8;
+  --sun:#b86b00; --sun-bg:#fff7e6; --sun-line:#f2b544; --sun-strong:#f0a020;
+  --leaf:#15803d; --leaf-bg:#e9f7ee; --leaf-ink:#ffffff;
+  --warn:#b45309;
+  --f-display:"Plus Jakarta Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-body:"Plus Jakarta Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0b151b; --surface:#122029; --surface-2:#182a35; --line:#26404e;
+  --ink:#e6f0f5; --ink-2:#a7bccb; --ink-3:#7e95a4;
+  --brand:#0e3f56; --brand-ink:#ffffff;
+  --sky:#6cc8ee; --sky-bg:#0f2d3b; --sky-line:#2b6f8d;
+  --sun:#f6c060; --sun-bg:#2c2312; --sun-line:#8a6420; --sun-strong:#f0a020;
+  --leaf:#22a355; --leaf-bg:#11291b; --leaf-ink:#ffffff;
+  --warn:#f0a75a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0b151b; --surface:#122029; --surface-2:#182a35; --line:#26404e;
+  --ink:#e6f0f5; --ink-2:#a7bccb; --ink-3:#7e95a4;
+  --brand:#0e3f56; --brand-ink:#ffffff;
+  --sky:#6cc8ee; --sky-bg:#0f2d3b; --sky-line:#2b6f8d;
+  --sun:#f6c060; --sun-bg:#2c2312; --sun-line:#8a6420; --sun-strong:#f0a020;
+  --leaf:#22a355; --leaf-bg:#11291b; --leaf-ink:#ffffff;
+  --warn:#f0a75a; color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--brand)}
+.wrap{max-width:560px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.num,.money{font-variant-numeric:tabular-nums}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--sun-strong);outline-offset:2px}
+
+/* Header */
+.top{background:var(--brand);color:var(--brand-ink);position:relative;overflow:hidden}
+.top .wrap{padding-block:22px 64px;position:relative;z-index:1}
+.brandrow{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.02em}
+.brandrow svg{flex:none}
+.top h1{font-size:1.65rem;font-weight:800;margin-top:18px;line-height:1.15}
+.top p{margin:6px 0 0;opacity:.82;font-size:.95rem}
+.sunarc{position:absolute;right:-70px;top:-80px;width:260px;height:260px;border-radius:50%;
+  background:radial-gradient(circle at 50% 50%,#ffcf5a 0 34%,rgba(255,207,90,.25) 35% 52%,rgba(255,207,90,.08) 53% 70%,transparent 71%)}
+
+main{margin-top:-44px;position:relative;z-index:2;display:grid;grid-template-columns:minmax(0,1fr);gap:14px;padding-bottom:40px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.card h2{font-size:1.05rem;font-weight:700}
+.card .sub{color:var(--ink-2);font-size:.88rem;margin:2px 0 0}
+.label{display:block;font-size:.82rem;font-weight:600;color:var(--ink-2);margin-bottom:6px}
+.eyebrow{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--ink-3)}
+
+/* Input */
+.billbox{display:flex;align-items:center;gap:6px;border:1.5px solid var(--line);border-radius:12px;padding:10px 14px;background:var(--surface-2)}
+.billbox:focus-within{border-color:var(--sky)}
+.billbox span{color:var(--ink-2);font-weight:600}
+.billbox input{width:0;border:0;background:transparent;outline:0;flex:1;min-width:0;font-size:1.35rem;font-weight:700;font-variant-numeric:tabular-nums}
+.range{width:100%;margin:12px 0 2px;accent-color:var(--sun-strong)}
+.rangescale{display:flex;justify-content:space-between;font-size:.75rem;color:var(--ink-3)}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin-top:14px}
+.grid2>*{min-width:0}
+select,.field input{width:100%;min-width:0;max-width:100%;border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--surface-2)}
+.seg{display:flex;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px}
+.seg button{flex:1;border:0;background:transparent;border-radius:8px;padding:8px 6px;font-weight:600;color:var(--ink-2);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+
+/* Rekomendasi */
+.reco{background:var(--sky-bg);border:1.5px solid var(--sky-line);border-radius:var(--r);padding:18px;text-align:center}
+.reco .eyebrow{color:var(--sky)}
+.reco .big{font-family:var(--f-display);font-size:2.1rem;font-weight:800;color:var(--sky);line-height:1.1;margin-top:4px}
+.reco .why{font-size:.84rem;color:var(--ink-2);margin-top:6px}
+.specs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.spec{background:var(--surface);border-radius:10px;padding:8px 6px}
+.spec b{display:block;font-size:1rem;font-variant-numeric:tabular-nums}
+.spec small{color:var(--ink-3);font-size:.72rem}
+
+/* Dasbor */
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.kpi{background:var(--surface-2);border-radius:12px;padding:12px}
+.kpi small{display:block;color:var(--ink-2);font-size:.78rem}
+.kpi b{display:block;font-size:1.2rem;font-weight:800;font-variant-numeric:tabular-nums;margin-top:2px}
+.kpi em{font-style:normal;font-size:.75rem;color:var(--ink-3)}
+.kpi.good b{color:var(--leaf)}
+.chartbox{margin-top:16px}
+.chartbox svg{display:block;width:100%;height:auto}
+.chartcap{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.chartcap h3{font-size:.92rem;font-weight:700}
+.chartcap span{font-size:.78rem;color:var(--ink-3)}
+.note{font-size:.8rem;color:var(--ink-3);margin:10px 0 0}
+.cover{height:10px;border-radius:6px;background:var(--surface-2);overflow:hidden;margin-top:6px}
+.cover i{display:block;height:100%;background:var(--sun-strong);border-radius:6px;transition:width .3s}
+
+/* Pembiayaan */
+.plans{display:grid;gap:10px;margin-top:12px}
+.plan{display:block;text-align:left;width:100%;border:1.5px solid var(--line);background:var(--surface);border-radius:12px;padding:14px;cursor:pointer;position:relative}
+.plan[aria-checked="true"].cicil{border-color:var(--sun-line);background:var(--sun-bg)}
+.plan[aria-checked="true"].tunai{border-color:var(--leaf);background:var(--leaf-bg)}
+.plan .pt{font-size:.88rem;font-weight:600;color:var(--ink-2)}
+.plan .pv{font-size:1.25rem;font-weight:800;font-variant-numeric:tabular-nums;margin-top:2px}
+.plan.cicil .pv{color:var(--sun)}
+.plan.tunai .pv{color:var(--leaf)}
+.plan .pd{font-size:.8rem;color:var(--ink-2);margin-top:4px}
+.badge{position:absolute;right:12px;top:12px;font-size:.68rem;font-weight:800;letter-spacing:.06em;color:var(--sun);border:1px solid var(--sun-line);border-radius:999px;padding:2px 8px;background:var(--surface)}
+.tenors{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.tenors button{border:1px solid var(--sun-line);background:var(--surface);border-radius:999px;padding:4px 12px;font-size:.82rem;font-weight:600;cursor:pointer;color:var(--ink-2)}
+.tenors button[aria-pressed="true"]{background:var(--sun-strong);color:#1b1200;border-color:var(--sun-strong)}
+.cash{margin-top:12px;border-top:1px dashed var(--line);padding-top:12px;display:grid;gap:6px;font-size:.88rem}
+.row{display:flex;justify-content:space-between;gap:10px}
+.row span:first-child{color:var(--ink-2)}
+.row span:last-child{font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
+.neg{color:var(--warn)}
+.pos{color:var(--leaf)}
+
+/* Garansi & alur */
+.list{display:grid;gap:10px;margin-top:12px}
+.li{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:start;font-size:.9rem}
+.li>div{min-width:0}
+.li .ic{width:30px;height:30px;border-radius:8px;background:var(--surface-2);display:grid;place-items:center;color:var(--sky)}
+.li b{display:block;font-size:.9rem}
+.li small{color:var(--ink-2);font-size:.8rem}
+.li .v{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.steps{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:0}
+.steps li{display:grid;grid-template-columns:30px 1fr;gap:12px;position:relative;padding-bottom:14px}
+.steps li:not(:last-child)::before{content:"";position:absolute;left:14px;top:30px;bottom:0;width:2px;background:var(--line)}
+.steps .n{width:30px;height:30px;border-radius:50%;background:var(--sun-bg);border:1.5px solid var(--sun-line);color:var(--sun);display:grid;place-items:center;font-weight:800;font-size:.85rem}
+.steps b{display:block;font-size:.92rem}
+.steps small{color:var(--ink-2);font-size:.82rem}
+
+/* Asumsi */
+details{border-top:1px solid var(--line);margin-top:14px;padding-top:10px}
+summary{cursor:pointer;font-weight:600;font-size:.88rem;color:var(--sky)}
+.asm{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.asm>label{min-width:0;font-size:.78rem;color:var(--ink-2);font-weight:600}
+.asm input{margin-top:4px;width:100%;border:1.5px solid var(--line);border-radius:8px;padding:7px 9px;background:var(--surface-2);font-variant-numeric:tabular-nums}
+.linkbtn{border:0;background:none;color:var(--sky);font-weight:600;padding:0;cursor:pointer;font-size:.82rem;margin-top:10px}
+
+/* Form */
+.form{display:grid;gap:10px;margin-top:12px}
+.field label{display:block;font-size:.8rem;font-weight:600;color:var(--ink-2);margin-bottom:4px}
+.cta{display:block;width:100%;border:0;border-radius:12px;background:var(--leaf);color:var(--leaf-ink);font-weight:700;padding:15px;font-size:1rem;cursor:pointer;text-align:center;text-decoration:none}
+.cta.ghost{background:transparent;color:var(--leaf);border:1.5px solid var(--leaf)}
+.msg{white-space:pre-wrap;background:var(--surface-2);border-radius:10px;padding:12px;font-family:var(--f-mono);font-size:.78rem;line-height:1.55;max-height:260px;overflow:auto;user-select:all}
+.err{color:var(--warn);font-size:.82rem;margin:0}
+.ok{color:var(--leaf);font-size:.85rem;font-weight:600;margin:0}
+.outbox{margin-top:12px;display:grid;gap:10px}
+.btnrow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+footer{color:var(--ink-3);font-size:.75rem;text-align:center;padding:0 0 28px}
+@media (max-width:380px){.grid2,.asm{grid-template-columns:1fr}.specs{grid-template-columns:1fr 1fr 1fr}.top h1{font-size:1.45rem}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+</head>
+<body>
+<header class="top">
+  <div class="sunarc" aria-hidden="true"></div>
+  <div class="wrap">
+    <div class="brandrow">
+      <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="6" fill="#ffcf5a"/><g stroke="#ffcf5a" stroke-width="2.2" stroke-linecap="round"><path d="M14 2v3M14 23v3M2 14h3M23 14h3M5.5 5.5l2.1 2.1M20.4 20.4l2.1 2.1M5.5 22.5l2.1-2.1M20.4 7.6l2.1-2.1"/></g></svg>
+      SuryaNusa
+    </div>
+    <h1>Kalkulator SuryaNusa</h1>
+    <p>Simulasi Kapasitas &amp; Pembiayaan PLTS Atap untuk Rumah &amp; UMKM</p>
+  </div>
+</header>
+
+<div class="wrap">
+<main>
+
+  <!-- INPUT -->
+  <section class="card" aria-labelledby="h-in">
+    <h2 id="h-in">Tagihan listrik Anda</h2>
+    <p class="sub">Masukkan rata-rata tagihan PLN per bulan.</p>
+    <div style="margin-top:14px">
+      <label class="label" for="bill">Rata-rata Tagihan Listrik Bulanan</label>
+      <div class="billbox"><span>Rp</span><input id="bill" inputmode="numeric" autocomplete="off" value="3.000.000"><span>/ bulan</span></div>
+      <input id="billRange" class="range" type="range" min="300000" max="20000000" step="100000" value="3000000" aria-label="Geser tagihan bulanan">
+      <div class="rangescale"><span>Rp300 rb</span><span>Rp20 jt</span></div>
+    </div>
+    <div class="grid2">
+      <div>
+        <span class="label">Jenis pelanggan</span>
+        <div class="seg" role="group" aria-label="Jenis pelanggan">
+          <button type="button" id="segRumah" data-seg="rumah" aria-pressed="false">Rumah</button>
+          <button type="button" id="segUmkm" data-seg="umkm" aria-pressed="true">UMKM</button>
+        </div>
+      </div>
+      <div class="field">
+        <label class="label" for="daya">Daya PLN terpasang</label>
+        <select id="daya"></select>
+        <small id="tarifLbl" style="display:block;color:var(--ink-3);font-size:.75rem;margin-top:4px"></small>
+      </div>
+    </div>
+  </section>
+
+  <!-- REKOMENDASI -->
+  <section class="reco" aria-live="polite">
+    <div class="eyebrow">Rekomendasi Sistem SuryaNusa</div>
+    <div class="big" id="recoBig">PLTS Atap 3 kWp</div>
+    <div class="why" id="recoWhy"></div>
+    <div class="specs">
+      <div class="spec"><b id="spPanel">6</b><small>panel 550 Wp</small></div>
+      <div class="spec"><b id="spRoof">17 m²</b><small>luas atap</small></div>
+      <div class="spec"><b id="spPrice">Rp45 jt</b><small>harga paket</small></div>
+    </div>
+  </section>
+
+  <!-- DASBOR -->
+  <section class="card" aria-labelledby="h-dash">
+    <h2 id="h-dash">Dasbor estimasi energi &amp; penghematan</h2>
+    <p class="sub">Perkiraan untuk sistem yang direkomendasikan.</p>
+    <div class="kpis">
+      <div class="kpi"><small>Produksi harian</small><b id="kProd">9,6 kWh</b><em id="kProdM">288 kWh / bulan</em></div>
+      <div class="kpi good"><small>Hemat per bulan</small><b id="kSave">Rp489.000</b><em id="kSaveY">Rp5,9 jt / tahun</em></div>
+      <div class="kpi"><small>Tagihan baru</small><b id="kNew">Rp2.511.000</b><em id="kNewPct">turun 16%</em></div>
+      <div class="kpi"><small>Balik modal (tunai)</small><b id="kPay">6,9 tahun</b><em id="kCo2">2,5 ton CO₂ / tahun</em></div>
+    </div>
+    <div style="margin-top:14px">
+      <div class="row" style="font-size:.82rem"><span>Porsi kebutuhan listrik dipenuhi surya</span><span id="covPct">16%</span></div>
+      <div class="cover"><i id="covBar" style="width:16%"></i></div>
+    </div>
+    <div class="chartbox">
+      <div class="chartcap"><h3>Profil produksi harian</h3><span id="peakLbl">puncak 2,4 kW pukul 12.00</span></div>
+      <svg id="chDay" viewBox="0 0 340 170" role="img" aria-label="Grafik produksi energi per jam"></svg>
+    </div>
+    <div class="chartbox">
+      <div class="chartcap"><h3>Akumulasi penghematan 25 tahun</h3><span id="lifeLbl"></span></div>
+      <svg id="chLife" viewBox="0 0 340 180" role="img" aria-label="Grafik akumulasi penghematan dibanding biaya"></svg>
+    </div>
+    <details id="asmBox">
+      <summary>Ubah asumsi perhitungan</summary>
+      <div class="asm">
+        <label>Tarif PLN (Rp/kWh)<input id="aTarif" inputmode="decimal"></label>
+        <label>Harga per kWp (Rp)<input id="aHarga" inputmode="numeric"></label>
+        <label>Jam matahari puncak (jam/hari)<input id="aPsh" inputmode="decimal"></label>
+        <label>Rasio performa sistem (%)<input id="aPr" inputmode="decimal"></label>
+        <label>Pemakaian siang hari (%)<input id="aSiang" inputmode="decimal"></label>
+        <label>Uang muka cicilan (%)<input id="aDp" inputmode="decimal"></label>
+        <label>Margin cicilan flat (%/tahun)<input id="aMargin" inputmode="decimal"></label>
+        <label>Diskon tunai (%)<input id="aDisk" inputmode="decimal"></label>
+        <label>Kenaikan tarif (%/tahun)<input id="aEsc" inputmode="decimal"></label>
+        <label>Faktor emisi (kg CO₂/kWh)<input id="aEf" inputmode="decimal"></label>
+      </div>
+      <button type="button" class="linkbtn" id="resetAsm">Kembalikan ke asumsi awal</button>
+      <p class="note">Listrik surya yang tidak terpakai saat itu juga tidak dihitung sebagai penghematan, karena ekspor ke jaringan PLN tidak lagi mengurangi tagihan (Permen ESDM No. 2/2024). Kapasitas dibatasi setara daya PLN terpasang.</p>
+    </details>
+  </section>
+
+  <!-- PEMBIAYAAN -->
+  <section class="card" aria-labelledby="h-fin">
+    <h2 id="h-fin">Pilihan skema pembiayaan</h2>
+    <div class="plans" role="radiogroup" aria-labelledby="h-fin">
+      <div class="plan cicil" role="radio" tabindex="0" id="planCicil" aria-checked="true">
+        <span class="badge">POPULER</span>
+        <div class="pt" id="cicilTitle">Cicilan Ringan UMKM (24 Bulan)</div>
+        <div class="pv" id="cicilVal">Rp1.500.000 / bln</div>
+        <div class="pd" id="cicilDesc"></div>
+        <div class="tenors" role="group" aria-label="Pilih tenor">
+          <button type="button" data-ten="12" aria-pressed="false">12 bln</button>
+          <button type="button" data-ten="24" aria-pressed="true">24 bln</button>
+          <button type="button" data-ten="36" aria-pressed="false">36 bln</button>
+        </div>
+      </div>
+      <div class="plan tunai" role="radio" tabindex="0" id="planTunai" aria-checked="false">
+        <div class="pt">Pembayaran Tunai (Cash)</div>
+        <div class="pv" id="tunaiVal">Rp40.500.000</div>
+        <div class="pd" id="tunaiDesc">Diskon Khusus 10%</div>
+      </div>
+    </div>
+    <div class="cash" id="cashBox"></div>
+  </section>
+
+  <!-- PERAWATAN & GARANSI -->
+  <section class="card" aria-labelledby="h-war">
+    <h2 id="h-war">Biaya perawatan &amp; garansi</h2>
+    <p class="sub">Ketentuan final mengikuti kontrak paket setelah survei.</p>
+    <div class="list">
+      <div class="li"><div class="ic"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 13l4-4m3-6l4 4-6 6-4-4z"/></svg></div><div><b>Perawatan rutin</b><small>Pembersihan panel &amp; inspeksi kabel 2× setahun</small></div><div class="v" id="wMaint">Rp450 rb/thn</div></div>
+      <div class="li"><div class="ic"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="3" width="12" height="10" rx="1"/><path d="M2 7h12M6 3v10M10 3v10"/></svg></div><div><b>Panel surya</b><small>Garansi produk dan garansi performa daya ≥80%</small></div><div class="v">12 / 25 thn</div></div>
+      <div class="li"><div class="ic"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="2" width="10" height="12" rx="1.5"/><path d="M8 5l-2 3h4l-2 3"/></svg></div><div><b>Inverter hybrid</b><small>Garansi pabrikan, dapat diperpanjang</small></div><div class="v">5–10 thn</div></div>
+      <div class="li"><div class="ic"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 1.5l5 2v4c0 3.2-2.2 5.7-5 7-2.8-1.3-5-3.8-5-7v-4z"/><path d="M5.5 8l2 2 3-3.5"/></svg></div><div><b>Pemasangan SuryaNusa</b><small>Kebocoran atap, sambungan &amp; commissioning</small></div><div class="v">2 thn</div></div>
+      <div class="li"><div class="ic"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 3v5l3 2"/><circle cx="8" cy="8" r="6.5"/></svg></div><div><b>Penggantian inverter</b><small>Perkiraan sekali di sekitar tahun ke-12</small></div><div class="v" id="wInv">Rp9 jt</div></div>
+    </div>
+  </section>
+
+  <!-- ALUR SURVEI -->
+  <section class="card" aria-labelledby="h-flow">
+    <h2 id="h-flow">Alur survei atap sebelum pemasangan</h2>
+    <ol class="steps">
+      <li><span class="n">1</span><div><b>Ajukan jadwal survei</b><small>Isi formulir di bawah. Tim menghubungi Anda via WhatsApp dalam 1×24 jam kerja.</small></div></li>
+      <li><span class="n">2</span><div><b>Survei teknis di lokasi</b><small>Teknisi mengukur atap, arah &amp; bayangan, kekuatan rangka, serta memeriksa panel MCB dan daya PLN.</small></div></li>
+      <li><span class="n">3</span><div><b>Desain &amp; penawaran final</b><small>Desain sistem kustom, simulasi produksi aktual, dan harga tetap. Belum ada biaya sampai Anda setuju.</small></div></li>
+      <li><span class="n">4</span><div><b>Akad pembiayaan</b><small>Pilih tunai atau cicilan, tanda tangan kontrak dan pembayaran uang muka.</small></div></li>
+      <li><span class="n">5</span><div><b>Pemasangan &amp; commissioning</b><small>Instalasi 1–3 hari, uji kelistrikan, pengurusan izin PLTS atap ke PLN, lalu sistem aktif.</small></div></li>
+    </ol>
+  </section>
+
+  <!-- FORM SURVEI -->
+  <section class="card" aria-labelledby="h-form" id="survei">
+    <h2 id="h-form">Ajukan Jadwal Survei Teknis</h2>
+    <p class="sub">Ringkasan simulasi Anda ikut terkirim agar teknisi bisa bersiap.</p>
+    <form class="form" id="frm" novalidate>
+      <div class="field"><label for="fNama">Nama</label><input id="fNama" autocomplete="name" placeholder="cth. Adizar Siregar"></div>
+      <div class="field"><label for="fHp">Nomor WhatsApp</label><input id="fHp" inputmode="tel" autocomplete="tel" placeholder="08xx xxxx xxxx"></div>
+      <div class="field"><label for="fAlamat">Alamat lokasi pemasangan</label><input id="fAlamat" autocomplete="street-address" placeholder="Jalan, kelurahan, kota"></div>
+      <div class="field"><label for="fTgl">Tanggal survei yang diinginkan</label><input id="fTgl" type="date"></div>
+      <p class="err" id="fErr" hidden></p>
+      <button class="cta" type="submit">Ajukan Jadwal Survei Teknis</button>
+    </form>
+    <div id="outBox" class="outbox" hidden>
+      <p class="ok">Pesan pengajuan siap. Kirim lewat WhatsApp atau salin.</p>
+      <div class="msg" id="outMsg"></div>
+      <div class="btnrow">
+        <a class="cta" id="waLink" href="#" target="_blank" rel="noopener">Buka WhatsApp</a>
+        <button class="cta ghost" type="button" id="copyBtn">Salin pesan</button>
+      </div>
+      <p class="note" id="waNote" style="margin:0"></p>
+    </div>
+  </section>
+
+</main>
+<footer>Hasil kalkulator adalah estimasi. Angka final ditentukan setelah survei teknis.<br>SuryaNusa · Institut Teknologi Indonesia, Tangerang Selatan</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+/* ===== Konfigurasi bisnis (ubah di sini) ===== */
+var CONFIG = {
+  waNumber: "",            // nomor WhatsApp SuryaNusa format 62xxxx; kosong = pengguna pilih kontak sendiri
+  panelWp: 550,
+  roofM2PerKwp: 5.5,
+  maintPctYear: 1.0,       // % harga paket per tahun
+  inverterPerKwp: 3000000
+};
+var DAYA = [
+  {va:1300, g:"R-1", t:1444.70, l:"R-1 · 1.300 VA"},
+  {va:2200, g:"R-1", t:1444.70, l:"R-1 · 2.200 VA"},
+  {va:3500, g:"R-2", t:1699.53, l:"R-2 · 3.500 VA"},
+  {va:4400, g:"R-2", t:1699.53, l:"R-2 · 4.400 VA"},
+  {va:5500, g:"R-2", t:1699.53, l:"R-2 · 5.500 VA"},
+  {va:6600, g:"R-3", t:1699.53, l:"R-3 · 6.600 VA"},
+  {va:7700, g:"B-2", t:1444.70, l:"B-2 · 7.700 VA"},
+  {va:11000,g:"B-2", t:1444.70, l:"B-2 · 11.000 VA"},
+  {va:13200,g:"B-2", t:1444.70, l:"B-2 · 13.200 VA"},
+  {va:16500,g:"B-2", t:1444.70, l:"B-2 · 16.500 VA"},
+  {va:23000,g:"B-2", t:1444.70, l:"B-2 · 23.000 VA"}
+];
+var DEF = {harga:15000000, psh:4.0, pr:80, siang:30, dp:20, margin:0, disk:10, esc:0, ef:0.87};
+var S = {bill:3000000, jenis:"umkm", dayaIdx:2, tarif:1699.53, tarifManual:false, tenor:24, plan:"cicil",
+         harga:DEF.harga, psh:DEF.psh, pr:DEF.pr, siang:DEF.siang, dp:DEF.dp, margin:DEF.margin, disk:DEF.disk, esc:DEF.esc, ef:DEF.ef};
+
+/* ===== Util ===== */
+var $ = function(id){return document.getElementById(id)};
+function rp(n){return "Rp" + Math.round(n).toLocaleString("id-ID")}
+function rpShort(n){
+  var a=Math.abs(n), s=n<0?"−":"";
+  if(a>=1e9) return s+"Rp"+(a/1e9).toLocaleString("id-ID",{maximumFractionDigits:1})+" M";
+  if(a>=1e6) return s+"Rp"+(a/1e6).toLocaleString("id-ID",{maximumFractionDigits:1})+" jt";
+  if(a>=1e3) return s+"Rp"+Math.round(a/1e3).toLocaleString("id-ID")+" rb";
+  return s+"Rp"+Math.round(a);
+}
+function rp2(n){return "Rp"+n.toLocaleString("id-ID",{minimumFractionDigits:2,maximumFractionDigits:2})}
+function fmt(n,d){return n.toLocaleString("id-ID",{maximumFractionDigits:d==null?1:d,minimumFractionDigits:0})}
+function parseNum(v){ if(typeof v!=="string") return +v; v=v.replace(/\s/g,"").replace(/\./g,"").replace(",","."); var n=parseFloat(v); return isFinite(n)?n:NaN }
+function digits(v){return parseInt(String(v).replace(/\D/g,""),10)||0}
+function store(){try{localStorage.setItem("suryanusa.v1",JSON.stringify(S))}catch(e){}}
+function load(){try{var d=JSON.parse(localStorage.getItem("suryanusa.v1")||"null"); if(d&&typeof d==="object"){for(var k in S){if(k in d) S[k]=d[k]}}}catch(e){}}
+
+/* ===== Perhitungan inti ===== */
+function calc(s){
+  var d = DAYA[s.dayaIdx];
+  var tarif = s.tarifManual ? s.tarif : d.t;
+  var kwhMonth = s.bill / tarif;
+  var kwhDay = kwhMonth / 30;
+  var dayLoad = kwhDay * s.siang/100;               // kebutuhan siang hari (kWh)
+  var yieldPerKwp = s.psh * s.pr/100;                // kWh/kWp/hari
+  var need = dayLoad / yieldPerKwp;
+  var cap = Math.max(1, Math.floor(d.va/1000));
+  var kwp = Math.min(cap, Math.max(1, Math.round(need)));
+  var limitedBy = need > cap + 0.49 ? "daya" : "kebutuhan";
+  var prodDay = kwp * yieldPerKwp;
+  var usedDay = Math.min(prodDay, dayLoad);          // tanpa net-metering
+  var saveMonth = usedDay*30*tarif;
+  var price = kwp * s.harga;
+  var cashPrice = price*(1 - s.disk/100);
+  var dpAmt = price*s.dp/100;
+  var principal = price - dpAmt;
+  var years = s.tenor/12;
+  var totalLoan = principal*(1 + s.margin/100*years);
+  var monthly = totalLoan / s.tenor;
+  var maintYear = price*CONFIG.maintPctYear/100;
+  var invRepl = kwp*CONFIG.inverterPerKwp;
+  // 25 tahun
+  var life=[], cum=0, cost=[], saveYr1=saveMonth*12, payback=null, costCum=cashPrice, cumPrev=0;
+  for(var y=1;y<=25;y++){
+    var deg = Math.pow(1-0.005, y-1), esc = Math.pow(1+s.esc/100, y-1);
+    var sy = Math.min(prodDay*deg, dayLoad)*365*tarif*esc;
+    var c = maintYear + (y===12?invRepl:0);
+    cum += sy - c;
+    if(payback===null && cum>=cashPrice){ payback = (y-1) + (cashPrice-cumPrev)/((cum-cumPrev)||1) }
+    cumPrev = cum;
+    life.push(cum);
+  }
+  var cumSave25 = life[24];
+  var finTotal = s.plan==="cicil" ? dpAmt+totalLoan : cashPrice;
+  return {d:d,tarif:tarif,kwhMonth:kwhMonth,kwhDay:kwhDay,dayLoad:dayLoad,need:need,cap:cap,kwp:kwp,limitedBy:limitedBy,
+    prodDay:prodDay,usedDay:usedDay,saveMonth:saveMonth,saveYear:saveYr1,price:price,cashPrice:cashPrice,dpAmt:dpAmt,
+    totalLoan:totalLoan,monthly:monthly,maintYear:maintYear,invRepl:invRepl,life:life,payback:payback,
+    co2:usedDay*365*s.ef/1000, coverage:Math.min(1,usedDay/kwhDay), newBill:Math.max(0,s.bill-saveMonth),
+    panels:Math.ceil(kwp*1000/CONFIG.panelWp), roof:kwp*CONFIG.roofM2PerKwp, finTotal:finTotal, net25:cumSave25-(finTotal-cashPrice)};
+}
+
+/* ===== Grafik ===== */
+var SVGNS="http://www.w3.org/2000/svg";
+function el(tag,attrs,txt){var e=document.createElementNS(SVGNS,tag);for(var k in attrs)e.setAttribute(k,attrs[k]);if(txt!=null)e.textContent=txt;return e}
+function niceMax(v){if(v<=0)return 1;var p=Math.pow(10,Math.floor(Math.log10(v)));var m=v/p;var n=m<=1?1:m<=2?2:m<=2.5?2.5:m<=5?5:10;return n*p}
+function drawDay(r){
+  var svg=$("chDay"); svg.textContent="";
+  var L=38,R=10,T=12,B=26,W=340,H=170,pw=W-L-R,ph=H-T-B;
+  // kurva sin² 6.00-18.00, luas = prodDay (integral sin² selama 12 jam = 6)
+  var peak = r.prodDay/6;
+  var ymax = niceMax(peak*1.1);
+  var load = r.kwhDay/24; // rata-rata beban kW
+  var x=function(h){return L+(h-5)/(19-5)*pw}, y=function(v){return T+ph-(v/ymax)*ph};
+  for(var i=0;i<=4;i++){var v=ymax*i/4;svg.appendChild(el("line",{x1:L,x2:W-R,y1:y(v),y2:y(v),stroke:"var(--line)","stroke-width":1}));
+    svg.appendChild(el("text",{x:L-6,y:y(v)+4,"text-anchor":"end","font-size":10,fill:"var(--ink-3)"},fmt(v,1)))}
+  svg.appendChild(el("text",{x:4,y:T+2,"font-size":10,fill:"var(--ink-3)"},"kW"));
+  [6,9,12,15,18].forEach(function(h){svg.appendChild(el("text",{x:x(h),y:H-8,"text-anchor":"middle","font-size":10,fill:"var(--ink-3)"},(h<10?"0":"")+h+".00"))});
+  var pts=[];for(var h=6;h<=18;h+=0.25){pts.push([x(h),y(peak*Math.pow(Math.sin((h-6)/12*Math.PI),2))])}
+  var d="M"+x(6)+","+y(0)+" "+pts.map(function(p){return "L"+p[0].toFixed(1)+","+p[1].toFixed(1)}).join(" ")+" L"+x(18)+","+y(0)+"Z";
+  svg.appendChild(el("path",{d:d,fill:"var(--sun-strong)","fill-opacity":.28,stroke:"none"}));
+  svg.appendChild(el("path",{d:"M"+pts.map(function(p){return p[0].toFixed(1)+","+p[1].toFixed(1)}).join(" L"),fill:"none",stroke:"var(--sun-strong)","stroke-width":2.2}));
+  if(load<=ymax){svg.appendChild(el("line",{x1:L,x2:W-R,y1:y(load),y2:y(load),stroke:"var(--sky)","stroke-width":1.5,"stroke-dasharray":"4 4"}));
+    svg.appendChild(el("text",{x:W-R,y:y(load)-5,"text-anchor":"end","font-size":10,fill:"var(--sky)","font-weight":600},"rata-rata beban "+fmt(load,1)+" kW"))}
+  svg.appendChild(el("circle",{cx:x(12),cy:y(peak),r:3.5,fill:"var(--sun-strong)"}));
+  $("peakLbl").textContent="puncak "+fmt(peak,1)+" kW pukul 12.00";
+}
+function drawLife(r){
+  var svg=$("chLife"); svg.textContent="";
+  var L=46,R=10,T=14,B=26,W=340,H=180,pw=W-L-R,ph=H-T-B;
+  var cost=r.finTotal, vals=r.life;
+  var vmax=niceMax(Math.max(cost,vals[24])*1.05), vmin=Math.min(0,vals[0]-cost)>0?0:0;
+  var x=function(t){return L+(t/25)*pw}, y=function(v){return T+ph-(v-vmin)/(vmax-vmin)*ph};
+  for(var i=0;i<=4;i++){var v=vmin+(vmax-vmin)*i/4;svg.appendChild(el("line",{x1:L,x2:W-R,y1:y(v),y2:y(v),stroke:"var(--line)","stroke-width":1}));
+    svg.appendChild(el("text",{x:L-6,y:y(v)+4,"text-anchor":"end","font-size":10,fill:"var(--ink-3)"},rpShort(v).replace("Rp","")))}
+  [0,5,10,15,20,25].forEach(function(t){svg.appendChild(el("text",{x:x(t),y:H-8,"text-anchor":"middle","font-size":10,fill:"var(--ink-3)"},t===0?"thn 0":t))});
+  // biaya investasi
+  svg.appendChild(el("line",{x1:x(0),x2:x(25),y1:y(cost),y2:y(cost),stroke:"var(--warn)","stroke-width":1.5,"stroke-dasharray":"5 4"}));
+  svg.appendChild(el("text",{x:x(0)+4,y:y(cost)-5,"font-size":10,fill:"var(--warn)","font-weight":600},"total biaya "+rpShort(cost)));
+  var pts=[[x(0),y(0)]];vals.forEach(function(v,i){pts.push([x(i+1),y(Math.max(v,vmin))])});
+  svg.appendChild(el("path",{d:"M"+pts.map(function(p){return p[0].toFixed(1)+","+p[1].toFixed(1)}).join(" L")+" L"+x(25)+","+y(0)+" L"+x(0)+","+y(0)+"Z",fill:"var(--leaf)","fill-opacity":.14}));
+  svg.appendChild(el("path",{d:"M"+pts.map(function(p){return p[0].toFixed(1)+","+p[1].toFixed(1)}).join(" L"),fill:"none",stroke:"var(--leaf)","stroke-width":2.2}));
+  var last=pts[pts.length-1];
+  svg.appendChild(el("circle",{cx:last[0],cy:last[1],r:3.5,fill:"var(--leaf)"}));
+  svg.appendChild(el("text",{x:last[0]-4,y:last[1]-8,"text-anchor":"end","font-size":10.5,fill:"var(--leaf)","font-weight":700},rpShort(vals[24])));
+  $("lifeLbl").textContent = r.net25>0 ? "untung bersih ± "+rpShort(r.net25) : "belum menutup biaya";
+}
+
+/* ===== Render ===== */
+function render(){
+  var r=calc(S);
+  $("recoBig").textContent="PLTS Atap "+fmt(r.kwp,1)+" kWp";
+  $("recoWhy").textContent = r.limitedBy==="daya"
+    ? "Kebutuhan siang Anda ± "+fmt(r.need,1)+" kWp, dibatasi daya PLN "+r.d.va.toLocaleString("id-ID")+" VA. Naikkan daya untuk sistem lebih besar."
+    : "Disesuaikan dengan pemakaian siang ± "+fmt(r.dayLoad,1)+" kWh/hari dari total "+fmt(r.kwhMonth,0)+" kWh/bulan.";
+  $("spPanel").textContent=r.panels; $("spRoof").textContent=fmt(r.roof,0)+" m²"; $("spPrice").textContent=rpShort(r.price);
+  $("kProd").textContent=fmt(r.prodDay,1)+" kWh"; $("kProdM").textContent=fmt(r.prodDay*30,0)+" kWh / bulan";
+  $("kSave").textContent=rp(Math.round(r.saveMonth/1000)*1000); $("kSaveY").textContent=rpShort(r.saveYear)+" / tahun";
+  $("kNew").textContent=rp(Math.round(r.newBill/1000)*1000); $("kNewPct").textContent="turun "+fmt(r.saveMonth/S.bill*100,0)+"%";
+  $("kPay").textContent= r.payback? fmt(r.payback,1)+" tahun" : "> 25 tahun";
+  $("kCo2").textContent=fmt(r.co2,1)+" ton CO₂ / tahun";
+  var cp=Math.round(r.coverage*100); $("covPct").textContent=cp+"%"; $("covBar").style.width=cp+"%";
+  // pembiayaan
+  $("cicilTitle").textContent="Cicilan Ringan "+(S.jenis==="umkm"?"UMKM":"Rumah")+" ("+S.tenor+" Bulan)";
+  $("cicilVal").textContent=rp(r.monthly)+" / bln";
+  $("cicilDesc").textContent="Uang muka "+S.dp+"% ("+rp(r.dpAmt)+")"+(S.margin>0?" · margin "+fmt(S.margin,1)+"%/thn":" · tanpa bunga");
+  $("tunaiVal").textContent=rp(r.cashPrice);
+  $("tunaiDesc").textContent="Diskon Khusus "+fmt(S.disk,0)+"% · hemat "+rp(r.price-r.cashPrice);
+  document.querySelectorAll(".tenors button").forEach(function(b){b.setAttribute("aria-pressed",String(+b.dataset.ten===S.tenor))});
+  $("planCicil").setAttribute("aria-checked",String(S.plan==="cicil")); $("planTunai").setAttribute("aria-checked",String(S.plan==="tunai"));
+  var cb=$("cashBox");
+  if(S.plan==="cicil"){
+    var gap=r.saveMonth-r.monthly;
+    cb.innerHTML='<div class="row"><span>Cicilan per bulan</span><span>'+rp(r.monthly)+'</span></div>'+
+      '<div class="row"><span>Penghematan tagihan per bulan</span><span class="pos">'+rp(r.saveMonth)+'</span></div>'+
+      '<div class="row"><span>Selisih arus kas selama cicilan</span><span class="'+(gap>=0?"pos":"neg")+'">'+(gap>=0?"+":"−")+rp(Math.abs(gap))+' / bln</span></div>'+
+      '<div class="row"><span>Total dibayar</span><span>'+rp(r.dpAmt+r.totalLoan)+'</span></div>'+
+      '<div class="row"><span>Setelah lunas, hemat bersih</span><span class="pos">'+rp(r.saveMonth-r.maintYear/12)+' / bln</span></div>';
+  } else {
+    cb.innerHTML='<div class="row"><span>Harga normal</span><span>'+rp(r.price)+'</span></div>'+
+      '<div class="row"><span>Diskon tunai</span><span class="pos">−'+rp(r.price-r.cashPrice)+'</span></div>'+
+      '<div class="row"><span>Total dibayar</span><span>'+rp(r.cashPrice)+'</span></div>'+
+      '<div class="row"><span>Balik modal</span><span>'+(r.payback?fmt(r.payback,1)+" tahun":"> 25 tahun")+'</span></div>';
+  }
+  $("wMaint").textContent=rpShort(r.maintYear)+"/thn"; $("wInv").textContent=rpShort(r.invRepl);
+  drawDay(r); drawLife(r);
+  window.__last=r; store();
+}
+
+/* ===== Input & event ===== */
+function syncInputs(){
+  $("bill").value=S.bill.toLocaleString("id-ID"); $("billRange").value=Math.min(20000000,Math.max(300000,S.bill));
+  $("daya").value=S.dayaIdx; $("tarifLbl").textContent="Tarif "+rp2(S.tarifManual?S.tarif:DAYA[S.dayaIdx].t)+"/kWh";
+  $("segRumah").setAttribute("aria-pressed",String(S.jenis==="rumah")); $("segUmkm").setAttribute("aria-pressed",String(S.jenis==="umkm"));
+  $("aTarif").value=fmt(S.tarifManual?S.tarif:DAYA[S.dayaIdx].t,2); $("aHarga").value=S.harga.toLocaleString("id-ID");
+  $("aPsh").value=fmt(S.psh,2); $("aPr").value=fmt(S.pr,1); $("aSiang").value=fmt(S.siang,1); $("aDp").value=fmt(S.dp,1);
+  $("aMargin").value=fmt(S.margin,2); $("aDisk").value=fmt(S.disk,1); $("aEsc").value=fmt(S.esc,1); $("aEf").value=fmt(S.ef,2);
+}
+DAYA.forEach(function(d,i){var o=document.createElement("option");o.value=i;o.textContent=d.l;$("daya").appendChild(o)});
+load(); syncInputs(); render();
+
+$("bill").addEventListener("input",function(e){var n=digits(e.target.value);S.bill=Math.min(n,1e9);var pos=e.target.value.length-e.target.selectionStart;
+  e.target.value=n?n.toLocaleString("id-ID"):"";try{var p=Math.max(0,e.target.value.length-pos);e.target.setSelectionRange(p,p)}catch(_){}
+  $("billRange").value=Math.min(20000000,Math.max(300000,S.bill)); if(S.bill>=50000) render()});
+$("billRange").addEventListener("input",function(e){S.bill=+e.target.value;$("bill").value=S.bill.toLocaleString("id-ID");render()});
+$("daya").addEventListener("change",function(e){S.dayaIdx=+e.target.value;S.tarifManual=false;syncInputs();render()});
+document.querySelectorAll("[data-seg]").forEach(function(b){b.addEventListener("click",function(){S.jenis=b.dataset.seg;
+  if(S.jenis==="rumah" && DAYA[S.dayaIdx].g==="B-2"){S.dayaIdx=4;S.tarifManual=false}
+  syncInputs();render()})});
+document.querySelectorAll(".tenors button").forEach(function(b){b.addEventListener("click",function(ev){ev.stopPropagation();S.tenor=+b.dataset.ten;S.plan="cicil";render()})});
+function pick(p){S.plan=p;render()}
+["planCicil","planTunai"].forEach(function(id){var p=id==="planCicil"?"cicil":"tunai";var n=$(id);
+  n.addEventListener("click",function(){pick(p)});n.addEventListener("keydown",function(e){if(e.key===" "||e.key==="Enter"){e.preventDefault();pick(p)}})});
+var AMAP={aTarif:"tarif",aHarga:"harga",aPsh:"psh",aPr:"pr",aSiang:"siang",aDp:"dp",aMargin:"margin",aDisk:"disk",aEsc:"esc",aEf:"ef"};
+var LIM={tarif:[100,10000],harga:[1e6,1e8],psh:[1,8],pr:[40,100],siang:[5,100],dp:[0,90],margin:[0,40],disk:[0,50],esc:[-5,20],ef:[0,2]};
+Object.keys(AMAP).forEach(function(id){$(id).addEventListener("change",function(e){var k=AMAP[id];var v=parseNum(e.target.value);
+  if(!isFinite(v)){syncInputs();return} v=Math.min(LIM[k][1],Math.max(LIM[k][0],v)); S[k]=v; if(k==="tarif")S.tarifManual=true; syncInputs(); render()})});
+$("resetAsm").addEventListener("click",function(){for(var k in DEF)S[k]=DEF[k];S.tarifManual=false;syncInputs();render()});
+
+/* ===== Formulir survei ===== */
+$("frm").addEventListener("submit",function(e){
+  e.preventDefault();
+  var nama=$("fNama").value.trim(), hp=$("fHp").value.trim(), al=$("fAlamat").value.trim(), tgl=$("fTgl").value;
+  var err=[]; if(!nama)err.push("nama"); if(digits(hp).toString().length<9)err.push("nomor WhatsApp yang valid"); if(!al)err.push("alamat");
+  if(err.length){$("fErr").textContent="Lengkapi "+err.join(", ")+" untuk mengajukan survei.";$("fErr").hidden=false;$("outBox").hidden=true;return}
+  $("fErr").hidden=true;
+  var r=window.__last, tglTxt = tgl? new Date(tgl+"T00:00:00").toLocaleDateString("id-ID",{weekday:"long",day:"numeric",month:"long",year:"numeric"}) : "fleksibel";
+  var msg="Halo SuryaNusa, saya ingin mengajukan jadwal survei teknis PLTS atap.\n\n"+
+    "Nama: "+nama+"\nWhatsApp: "+hp+"\nAlamat: "+al+"\nTanggal survei: "+tglTxt+"\n\n"+
+    "Hasil Kalkulator SuryaNusa:\n"+
+    "- Jenis: "+(S.jenis==="umkm"?"UMKM":"Rumah tangga")+", daya PLN "+r.d.va.toLocaleString("id-ID")+" VA\n"+
+    "- Tagihan rata-rata: "+rp(S.bill)+" / bulan\n"+
+    "- Rekomendasi: PLTS Atap "+fmt(r.kwp,1)+" kWp ("+r.panels+" panel)\n"+
+    "- Estimasi hemat: "+rp(r.saveMonth)+" / bulan\n"+
+    "- Skema: "+(S.plan==="cicil" ? "Cicilan "+S.tenor+" bulan, "+rp(r.monthly)+" / bln (DP "+rp(r.dpAmt)+")" : "Tunai "+rp(r.cashPrice)+" (diskon "+fmt(S.disk,0)+"%)")+"\n\nTerima kasih.";
+  $("outMsg").textContent=msg;
+  var base = CONFIG.waNumber ? "https://wa.me/"+CONFIG.waNumber : "https://wa.me/";
+  $("waLink").href = base+"?text="+encodeURIComponent(msg);
+  $("waNote").textContent = CONFIG.waNumber ? "Pesan dikirim ke WhatsApp resmi SuryaNusa: +"+CONFIG.waNumber+"." : "Pilih kontak SuryaNusa di WhatsApp setelah aplikasi terbuka.";
+  $("outBox").hidden=false; $("outBox").scrollIntoView({behavior:"smooth",block:"nearest"});
+});
+$("copyBtn").addEventListener("click",function(){
+  var t=$("outMsg").textContent, b=$("copyBtn");
+  function sel(){var rg=document.createRange();rg.selectNodeContents($("outMsg"));var s=window.getSelection();s.removeAllRanges();s.addRange(rg);b.textContent="Teks terpilih, salin manual"}
+  if(window.AndroidBridge&&AndroidBridge.copy){AndroidBridge.copy(t);b.textContent="Tersalin";return}
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){b.textContent="Tersalin"},sel)}else sel();
+  setTimeout(function(){b.textContent="Salin pesan"},2500);
+});
+})();
+</script>
+
+</body>
+</html>
