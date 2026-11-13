@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}</style>
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>Kalkulator SuryaNusa</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="theme-color" content="#0b4f6c">
@@ -157,6 +157,8 @@ summary{cursor:pointer;font-weight:600;font-size:.88rem;color:var(--sky)}
 .field label{display:block;font-size:.8rem;font-weight:600;color:var(--ink-2);margin-bottom:4px}
 .cta{display:block;width:100%;border:0;border-radius:12px;background:var(--leaf);color:var(--leaf-ink);font-weight:700;padding:15px;font-size:1rem;cursor:pointer;text-align:center;text-decoration:none}
 .cta.ghost{background:transparent;color:var(--leaf);border:1.5px solid var(--leaf)}
+.outbox.pending .ok{color:var(--warn)}
+.cta[disabled]{opacity:.6;cursor:wait}
 .msg{white-space:pre-wrap;background:var(--surface-2);border-radius:10px;padding:12px;font-family:var(--f-mono);font-size:.78rem;line-height:1.55;max-height:260px;overflow:auto;user-select:all}
 .err{color:var(--warn);font-size:.82rem;margin:0}
 .ok{color:var(--leaf);font-size:.85rem;font-weight:600;margin:0}
@@ -315,23 +317,19 @@ footer{color:var(--ink-3);font-size:.75rem;text-align:center;padding:0 0 28px}
   <!-- FORM SURVEI -->
   <section class="card" aria-labelledby="h-form" id="survei">
     <h2 id="h-form">Ajukan Jadwal Survei Teknis</h2>
-    <p class="sub">Ringkasan simulasi Anda ikut terkirim agar teknisi bisa bersiap.</p>
+    <p class="sub">Ringkasan simulasi Anda ikut terkirim. Tim SuryaNusa akan menghubungi Anda lewat WhatsApp untuk konfirmasi jadwal.</p>
     <form class="form" id="frm" novalidate>
       <div class="field"><label for="fNama">Nama</label><input id="fNama" autocomplete="name" placeholder="cth. Adizar Siregar"></div>
       <div class="field"><label for="fHp">Nomor WhatsApp</label><input id="fHp" inputmode="tel" autocomplete="tel" placeholder="08xx xxxx xxxx"></div>
       <div class="field"><label for="fAlamat">Alamat lokasi pemasangan</label><input id="fAlamat" autocomplete="street-address" placeholder="Jalan, kelurahan, kota"></div>
       <div class="field"><label for="fTgl">Tanggal survei yang diinginkan</label><input id="fTgl" type="date"></div>
       <p class="err" id="fErr" hidden></p>
-      <button class="cta" type="submit">Ajukan Jadwal Survei Teknis</button>
+      <button class="cta" type="submit" id="fBtn">Ajukan Jadwal Survei Teknis</button>
     </form>
-    <div id="outBox" class="outbox" hidden>
-      <p class="ok">Pesan pengajuan siap. Kirim lewat WhatsApp atau salin.</p>
+    <div id="outBox" class="outbox" hidden role="status">
+      <p class="ok" id="outTitle"></p>
       <div class="msg" id="outMsg"></div>
-      <div class="btnrow">
-        <a class="cta" id="waLink" href="#" target="_blank" rel="noopener">Buka WhatsApp</a>
-        <button class="cta ghost" type="button" id="copyBtn">Salin pesan</button>
-      </div>
-      <p class="note" id="waNote" style="margin:0"></p>
+      <p class="note" id="outNote" style="margin:0"></p>
     </div>
   </section>
 
@@ -344,7 +342,8 @@ footer{color:var(--ink-3);font-size:.75rem;text-align:center;padding:0 0 28px}
 "use strict";
 /* ===== Konfigurasi bisnis (ubah di sini) ===== */
 var CONFIG = {
-  waNumber: "",            // nomor WhatsApp SuryaNusa format 62xxxx; kosong = pengguna pilih kontak sendiri
+  // Alamat Web App Google Apps Script (berakhiran /exec) yang menulis ke Google Sheet SuryaNusa
+  sheetUrl: "",
   panelWp: 550,
   roofM2PerKwp: 5.5,
   maintPctYear: 1.0,       // % harga paket per tahun
@@ -545,35 +544,69 @@ Object.keys(AMAP).forEach(function(id){$(id).addEventListener("change",function(
   if(!isFinite(v)){syncInputs();return} v=Math.min(LIM[k][1],Math.max(LIM[k][0],v)); S[k]=v; if(k==="tarif")S.tarifManual=true; syncInputs(); render()})});
 $("resetAsm").addEventListener("click",function(){for(var k in DEF)S[k]=DEF[k];S.tarifManual=false;syncInputs();render()});
 
-/* ===== Formulir survei ===== */
+/* ===== Formulir survei → Google Sheets ===== */
+var QKEY="suryanusa.queue", CB={};
+function qGet(){try{return JSON.parse(localStorage.getItem(QKEY)||"[]")}catch(e){return []}}
+function qSet(a){try{localStorage.setItem(QKEY,JSON.stringify(a))}catch(e){}}
+window.__sheetCb=function(id,ok,resp){var c=CB[id];if(!c)return;delete CB[id];ok?c.res():c.rej(new Error(resp||"gagal"))};
+function sendToSheet(payload){
+  return new Promise(function(res,rej){
+    if(!CONFIG.sheetUrl){rej(new Error("Alamat Google Sheet belum diatur"));return}
+    var body=JSON.stringify(payload);
+    if(window.AndroidBridge&&AndroidBridge.post){
+      var id="c"+Date.now()+Math.floor(Math.random()*1e6); CB[id]={res:res,rej:rej};
+      setTimeout(function(){if(CB[id]){delete CB[id];rej(new Error("waktu habis"))}},30000);
+      AndroidBridge.post(CONFIG.sheetUrl,body,id); return;
+    }
+    fetch(CONFIG.sheetUrl,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:body})
+      .then(function(r){r.ok?res():rej(new Error("HTTP "+r.status))}).catch(rej);
+  });
+}
+function flushQueue(){
+  var q=qGet(); if(!q.length||!CONFIG.sheetUrl) return;
+  var item=q[0];
+  sendToSheet(item).then(function(){var rest=qGet().filter(function(x){return x.id!==item.id});qSet(rest);
+    if($("outBox").classList.contains("pending")&&$("outMsg").dataset.id===item.id){showDone(item,true)}
+    flushQueue()},function(){});
+}
+function newId(){var d=new Date(),p=function(n){return (n<10?"0":"")+n};
+  return "SN-"+d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+"-"+Math.random().toString(36).slice(2,6).toUpperCase()}
+function summary(p){
+  return "Nomor pengajuan: "+p.id+"\nNama: "+p.nama+"\nWhatsApp: "+p.hp+"\nAlamat: "+p.alamat+"\nTanggal survei: "+p.tanggal+
+    "\n\nRekomendasi: PLTS Atap "+p.kwp+" kWp ("+p.panel+" panel)\nEstimasi hemat: "+rp(p.hemat)+" / bulan\nSkema: "+p.skema;
+}
+function showDone(p,ok){
+  var b=$("outBox"); b.hidden=false; b.classList.toggle("pending",!ok);
+  $("outTitle").textContent= ok ? "Pengajuan terkirim. Terima kasih!" : "Pengajuan tersimpan, menunggu koneksi internet";
+  $("outMsg").textContent=summary(p); $("outMsg").dataset.id=p.id;
+  $("outNote").textContent= ok ? "Tim SuryaNusa akan menghubungi Anda lewat WhatsApp untuk konfirmasi jadwal survei. Simpan nomor pengajuan di atas."
+    : "Pengajuan akan terkirim otomatis begitu HP tersambung ke internet. Anda tidak perlu mengisi ulang.";
+}
 $("frm").addEventListener("submit",function(e){
   e.preventDefault();
   var nama=$("fNama").value.trim(), hp=$("fHp").value.trim(), al=$("fAlamat").value.trim(), tgl=$("fTgl").value;
   var err=[]; if(!nama)err.push("nama"); if(digits(hp).toString().length<9)err.push("nomor WhatsApp yang valid"); if(!al)err.push("alamat");
   if(err.length){$("fErr").textContent="Lengkapi "+err.join(", ")+" untuk mengajukan survei.";$("fErr").hidden=false;$("outBox").hidden=true;return}
   $("fErr").hidden=true;
-  var r=window.__last, tglTxt = tgl? new Date(tgl+"T00:00:00").toLocaleDateString("id-ID",{weekday:"long",day:"numeric",month:"long",year:"numeric"}) : "fleksibel";
-  var msg="Halo SuryaNusa, saya ingin mengajukan jadwal survei teknis PLTS atap.\n\n"+
-    "Nama: "+nama+"\nWhatsApp: "+hp+"\nAlamat: "+al+"\nTanggal survei: "+tglTxt+"\n\n"+
-    "Hasil Kalkulator SuryaNusa:\n"+
-    "- Jenis: "+(S.jenis==="umkm"?"UMKM":"Rumah tangga")+", daya PLN "+r.d.va.toLocaleString("id-ID")+" VA\n"+
-    "- Tagihan rata-rata: "+rp(S.bill)+" / bulan\n"+
-    "- Rekomendasi: PLTS Atap "+fmt(r.kwp,1)+" kWp ("+r.panels+" panel)\n"+
-    "- Estimasi hemat: "+rp(r.saveMonth)+" / bulan\n"+
-    "- Skema: "+(S.plan==="cicil" ? "Cicilan "+S.tenor+" bulan, "+rp(r.monthly)+" / bln (DP "+rp(r.dpAmt)+")" : "Tunai "+rp(r.cashPrice)+" (diskon "+fmt(S.disk,0)+"%)")+"\n\nTerima kasih.";
-  $("outMsg").textContent=msg;
-  var base = CONFIG.waNumber ? "https://wa.me/"+CONFIG.waNumber : "https://wa.me/";
-  $("waLink").href = base+"?text="+encodeURIComponent(msg);
-  $("waNote").textContent = CONFIG.waNumber ? "Pesan dikirim ke WhatsApp resmi SuryaNusa: +"+CONFIG.waNumber+"." : "Pilih kontak SuryaNusa di WhatsApp setelah aplikasi terbuka.";
-  $("outBox").hidden=false; $("outBox").scrollIntoView({behavior:"smooth",block:"nearest"});
+  var r=window.__last;
+  var p={id:newId(), nama:nama, hp:hp, alamat:al,
+    tanggal: tgl? new Date(tgl+"T00:00:00").toLocaleDateString("id-ID",{weekday:"long",day:"numeric",month:"long",year:"numeric"}) : "Fleksibel",
+    jenis: S.jenis==="umkm"?"UMKM":"Rumah tangga", daya:r.d.va, tagihan:Math.round(S.bill), kwp:r.kwp, panel:r.panels,
+    hemat:Math.round(r.saveMonth),
+    skema: S.plan==="cicil" ? "Cicilan "+S.tenor+" bulan" : "Tunai (diskon "+fmt(S.disk,0)+"%)",
+    cicilan: S.plan==="cicil" ? Math.round(r.monthly) : "",
+    total: Math.round(S.plan==="cicil" ? r.dpAmt+r.totalLoan : r.cashPrice)};
+  var btn=$("fBtn"); btn.disabled=true; btn.textContent="Mengirim…";
+  sendToSheet(p).then(function(){
+    showDone(p,true); $("frm").reset();
+  },function(){
+    var q=qGet(); q.push(p); qSet(q); showDone(p,false);
+  }).then(function(){btn.disabled=false; btn.textContent="Ajukan Jadwal Survei Teknis";
+    $("outBox").scrollIntoView({behavior:"smooth",block:"nearest"})});
 });
-$("copyBtn").addEventListener("click",function(){
-  var t=$("outMsg").textContent, b=$("copyBtn");
-  function sel(){var rg=document.createRange();rg.selectNodeContents($("outMsg"));var s=window.getSelection();s.removeAllRanges();s.addRange(rg);b.textContent="Teks terpilih, salin manual"}
-  if(window.AndroidBridge&&AndroidBridge.copy){AndroidBridge.copy(t);b.textContent="Tersalin";return}
-  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){b.textContent="Tersalin"},sel)}else sel();
-  setTimeout(function(){b.textContent="Salin pesan"},2500);
-});
+window.addEventListener("online",flushQueue);
+setInterval(flushQueue,60000);
+flushQueue();
 })();
 </script>
 
