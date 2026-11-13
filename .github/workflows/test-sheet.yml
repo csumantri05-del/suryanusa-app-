@@ -1,0 +1,18 @@
+name: Uji kirim ke Google Sheet
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cek web app aktif (GET)
+        run: curl -sS -L --max-time 30 "https://script.google.com/macros/s/AKfycby9J51T7uVJPIX9HoGcTbRUe86dj-0uu_j80K8L0Zhq3yg-ANgaeu0vo5ROM0q4VojHpw/exec"; echo
+      - name: Kirim satu pengajuan uji (POST)
+        run: |
+          ID="SN-UJI-$(date +%Y%m%d%H%M)"
+          BODY='{"id":"'$ID'","nama":"DATA UJI - boleh dihapus","hp":"081200000000","alamat":"Uji koneksi aplikasi","tanggal":"Fleksibel","jenis":"UMKM","daya":3500,"tagihan":3000000,"kwp":3,"panel":6,"hemat":489465,"skema":"Cicilan 24 bulan","cicilan":1500000,"total":45000000}'
+          RES=$(curl -sS -L --max-time 30 -H "Content-Type: text/plain;charset=utf-8" --data "$BODY" "https://script.google.com/macros/s/AKfycby9J51T7uVJPIX9HoGcTbRUe86dj-0uu_j80K8L0Zhq3yg-ANgaeu0vo5ROM0q4VojHpw/exec")
+          echo "Respon: $RES"
+          echo "$RES" | grep -q '"ok":true'
